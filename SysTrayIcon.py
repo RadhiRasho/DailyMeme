@@ -112,6 +112,10 @@ def setEnv(icon: Icon):
         icon.notify("Daily Meme", "Test Mode Disabled")
 
 
+def scheduledJobs(icon: Icon):
+    icon.notify(f"{schedule.jobs[0]}")
+
+
 image = Image.open("./favicon.ico")
 menu = Menu(
     item(
@@ -120,6 +124,7 @@ menu = Menu(
         checked=lambda item: os.getenv("TESTING") == "True",
     ),
     item("Run Meme Manully", run_meme),
+    item("Scheduled Jobs", scheduledJobs),
     item("Quit", quit),
 )
 icon = pystray.Icon("name", image, "Daily Meme", menu)
