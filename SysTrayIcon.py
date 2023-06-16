@@ -40,7 +40,7 @@ def SendMeme(testMode: bool = False) -> bool:
       <head></head>
       <body>
         <p>
-          <p><strong>r/{subreddit}</strong></p><p><strong>u/{author}</strong></p>
+          <p><strong>r/{subreddit} - u/{author}</strong></p>
           <p><strong>Title: {title}</strong></p>
 
           <img height='280px' width='900px' src='{url}'></img><br/><br/>
@@ -93,12 +93,13 @@ def run_meme(icon: Icon):
     SendMeme(testMode=testMode)
 
 
-def setup(icon: Icon):
+def setup(icon: Icon) -> None:
     testMode = True if os.getenv("TESTING") == "True" else False
 
     # Schedule the main function to run at 8 am on Monday through Friday
     schedule.every().day.at("10:00").do(SendMeme, testMode=testMode)
 
+    print(schedule.jobs)
     icon.notify("Daily Meme", "Scheduled memes have been started")
 
 
@@ -124,6 +125,8 @@ menu = Menu(
 icon = pystray.Icon("name", image, "Daily Meme", menu)
 
 icon._start_setup(setup=setup)
+
+icon._mark_ready()
 
 icon.run_detached()
 
