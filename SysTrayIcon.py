@@ -14,37 +14,44 @@ import os
 load_dotenv(".env")
 
 
-def get_meme() -> str:
+def get_meme():
     data = requests.get(
-        url="https://meme-api.com/gimme",
+        url="https://meme-api.com/gimme/funny",
         headers={"Content-Type": "application/json"},
     ).json()
 
-    return data["preview"][3]
+    return data
 
 
-def recursive_Meme_Fetcher() -> str:
+def recursive_Meme_Fetcher():
     try:
-        return get_meme()
+        data = get_meme()
+        return data if data["nsfw"] == False else recursive_Meme_Fetcher()
     except Exception as e:
         print("Failed to fetch meme due to API being down or private repo", e)
         return recursive_Meme_Fetcher()
 
 
-def SendMeme(testMode: bool = False) -> None:
-    url: str = recursive_Meme_Fetcher()
+def SendMeme(testMode: bool = False) -> bool:
+    data = recursive_Meme_Fetcher()
+
     text = """\
       <html>
       <head></head>
       <body>
         <p>
-          <p>Friendly Advisory: This email contains a meme.</p><br/>
+          <p><strong>r/{subreddit}</strong></p><p><strong>u/{author}</strong></p>
+          <p><strong>Title: {title}</strong></p>
+
           <img height='280px' width='900px' src='{url}'></img><br/><br/>
         </p>
       </body>
     </html>
     """.format(
-        url=url
+        url=data["preview"][3],
+        title=data["title"],
+        subreddit=data["subreddit"],
+        author=data["author"],
     )
 
     me = os.getenv("ME", "Meme-Bot@memes.com")
@@ -67,28 +74,32 @@ def SendMeme(testMode: bool = False) -> None:
             for sendTo in SentToList.split(","):
                 smtp.sendmail(from_addr=me, to_addrs=sendTo, msg=msg.as_string())
             smtp.quit()
+        return True
     except Exception as e:
         print("Failed to send email", e)
         SendMeme(testMode=testMode)
+        return True
 
 
 def quit(icon: Icon):
     schedule.clear()
-    time.sleep(5)
+    icon.notify("Daily Meme", "Scheduled memes have been cancelled")
     icon.stop()
 
 
-def run_meme(icon: Icon, TestMode: bool):
+def run_meme(icon: Icon):
+    testMode = True if os.getenv("TESTING") == "True" else False
     icon.notify("Daily Meme", "Sending meme...")
-    SendMeme(testMode=TestMode)
+    SendMeme(testMode=testMode)
 
 
 def setup(icon: Icon):
     testMode = True if os.getenv("TESTING") == "True" else False
 
     # Schedule the main function to run at 8 am on Monday through Friday
+    schedule.every().day.at("10:00").do(SendMeme, testMode=testMode)
 
-    schedule.every().day.at("10:00", "America/Chicago").do(SendMeme, testMode=testMode)
+    icon.notify("Daily Meme", "Scheduled memes have been started")
 
 
 def setEnv(icon: Icon):
@@ -113,8 +124,6 @@ menu = Menu(
 icon = pystray.Icon("name", image, "Daily Meme", menu)
 
 icon._start_setup(setup=setup)
-
-icon._mark_ready()
 
 icon.run_detached()
 
