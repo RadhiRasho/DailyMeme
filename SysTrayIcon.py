@@ -209,10 +209,13 @@ menu = Menu(
     item("Scheduled Jobs", scheduledJobs),
     item("Quit", quit),
 )
+
+iconName = "Daily Meme Test Mode" if os.getenv("TESTING") == "True" else "Daily Meme"
+
 icon = pystray.Icon(
     "name",
     image,
-    "Daily Meme" if os.getenv("TESTING") == "True" else "Daily Meme Test Mode",
+    iconName,
     menu,
 )
 
