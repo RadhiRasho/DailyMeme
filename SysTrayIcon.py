@@ -15,8 +15,9 @@ load_dotenv(".env")
 
 
 def get_meme():
+    subReddit = os.getenv("SUB_REDDIT", "")
     data = requests.get(
-        url="https://meme-api.com/gimme/funny",
+        url=f"https://meme-api.com/gimme/{subReddit}",
         headers={"Content-Type": "application/json"},
     ).json()
 
@@ -28,7 +29,7 @@ def recursive_Meme_Fetcher():
         data = get_meme()
         return data if data["nsfw"] == False else recursive_Meme_Fetcher()
     except Exception as e:
-        print("Failed to fetch meme due to API being down or private repo", e)
+        print("Failed to fetch meme due to API being down or private sub reddit", e)
         return recursive_Meme_Fetcher()
 
 
@@ -40,15 +41,15 @@ def SendMeme(testMode: bool = False) -> bool:
       <head></head>
       <body>
         <p>
-          <p><strong>r/{subreddit} - u/{author}</strong></p>
-          <p><strong>Title: {title}</strong></p>
+          <h2> r/{subreddit} - u/{author} </h2>
+          <h2>Title: {title} </h2>
 
           <img height='280px' width='900px' src='{url}'></img><br/><br/>
         </p>
       </body>
     </html>
     """.format(
-        url=data["preview"][3],
+        url=data["url"],
         title=data["title"],
         subreddit=data["subreddit"],
         author=data["author"],
@@ -65,6 +66,7 @@ def SendMeme(testMode: bool = False) -> bool:
     msg = MIMEMultipart("Message")
     msg["Subject"] = "Your Daily Meme"
     msg["From"] = me
+    msg["Bcc"] = me
     msg["To"] = SentToList
 
     msg.attach(MIMEText(text, "html"))
@@ -99,12 +101,11 @@ def setup(icon: Icon) -> None:
     # Schedule the main function to run at 8 am on Monday through Friday
     schedule.every().day.at("10:00").do(SendMeme, testMode=testMode)
 
-    print(schedule.jobs)
     icon.notify("Daily Meme", "Scheduled memes have been started")
 
 
-def setEnv(icon: Icon):
-    if not icon.menu.items[0].checked:
+def setEnv(icon: Icon, item: item):
+    if not item.checked:
         os.environ["TESTING"] = "True"
         icon.notify("Daily Meme", "Test Mode Enabled")
     else:
@@ -113,7 +114,37 @@ def setEnv(icon: Icon):
 
 
 def scheduledJobs(icon: Icon):
-    icon.notify(f"{schedule.jobs[0]}")
+    icon.notify(f"{schedule.jobs}")
+
+
+def checkSendToList(icon: Icon):
+    sendToList = (
+        "TESTING_SENT_TO_LIST" if os.getenv("TESTING") == "True" else "SEND_TO_LIST"
+    )
+
+    icon.notify(f"{os.getenv(sendToList)}")
+
+
+def updatedSubReddit(icon: Icon, item: item):
+    match item.text:
+        case "r/funny":
+            os.environ.update({"SUB_REDDIT": "funny"})
+        case "r/memes":
+            os.environ.update({"SUB_REDDIT": "memes"})
+        case "r/dankmemes":
+            os.environ.update({"SUB_REDDIT": "dankmemes"})
+        case "r/wholesomememes":
+            os.environ.update({"SUB_REDDIT": "wholesomememes"})
+        case "r/ProgrammerHumor":
+            os.environ.update({"SUB_REDDIT": "ProgrammerHumor"})
+        case "r/Animemes":
+            os.environ.update({"SUB_REDDIT": "Animemes"})
+        case "r/HistoryMemes":
+            os.environ.update({"SUB_REDDIT": "HistoryMemes"})
+        case _:
+            os.environ.update({"SUB_REDDIT": ""})
+
+    icon.notify("Daily Meme", f"Sub-Reddit Updated to {item.text}")
 
 
 image = Image.open("./favicon.ico")
@@ -124,10 +155,66 @@ menu = Menu(
         checked=lambda item: os.getenv("TESTING") == "True",
     ),
     item("Run Meme Manully", run_meme),
+    item(
+        "Set Sub-Reddit",
+        Menu(
+            item(
+                "r/funny",
+                updatedSubReddit,
+                checked=lambda item: os.getenv("SUB_REDDIT") == "funny",
+            ),
+            item(
+                "r/memes",
+                updatedSubReddit,
+                checked=lambda item: os.getenv("SUB_REDDIT") == "memes",
+            ),
+            item(
+                "r/dankmemes",
+                updatedSubReddit,
+                checked=lambda item: os.getenv("SUB_REDDIT") == "dankmemes",
+            ),
+            item(
+                "r/wholesomememes",
+                updatedSubReddit,
+                checked=lambda item: os.getenv("SUB_REDDIT") == "wholesomememes",
+            ),
+            item(
+                "r/ProgrammerHumor",
+                updatedSubReddit,
+                checked=lambda item: os.getenv("SUB_REDDIT") == "ProgrammerHumor",
+            ),
+            item(
+                "r/PrequelMemes",
+                updatedSubReddit,
+                checked=lambda item: os.getenv("SUB_REDDIT") == "PrequelMemes",
+            ),
+            item(
+                "r/Animemes",
+                updatedSubReddit,
+                checked=lambda item: os.getenv("SUB_REDDIT") == "Animemes",
+            ),
+            item(
+                "r/HistoryMemes",
+                updatedSubReddit,
+                checked=lambda item: os.getenv("SUB_REDDIT") == "historymemes",
+            ),
+            item(
+                "Random Sub",
+                updatedSubReddit,
+                checked=lambda item: os.getenv("SUB_REDDIT") == "",
+            ),
+        ),
+    ),
+    item("Check Send To List", checkSendToList),
     item("Scheduled Jobs", scheduledJobs),
     item("Quit", quit),
 )
-icon = pystray.Icon("name", image, "Daily Meme", menu)
+icon = pystray.Icon(
+    "name",
+    image,
+    "Daily Meme" if os.getenv("TESTING") == "True" else "Daily Meme Test Mode",
+    menu,
+)
 
 icon._start_setup(setup=setup)
 
