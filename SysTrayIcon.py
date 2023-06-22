@@ -76,10 +76,11 @@ def SendMeme(testMode: bool = False) -> bool:
             for sendTo in SentToList.split(","):
                 smtp.sendmail(from_addr=me, to_addrs=sendTo, msg=msg.as_string())
             smtp.quit()
-        return True
+        smtp.close()
     except Exception as e:
         print("Failed to send email", e)
         SendMeme(testMode=testMode)
+    finally:
         return True
 
 
