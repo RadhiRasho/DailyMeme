@@ -41,8 +41,8 @@ def SendMeme(testMode: bool = False) -> bool:
       <head></head>
       <body>
         <p>
-          <h2> r/{subreddit} - u/{author} </h2>
-          <h2>Title: {title} </h2>
+          <h3> r/{subreddit} - u/{author} </h3>
+          <h3>Title: {title} </h3>
 
           <img height='280px' width='900px' src='{url}'></img><br/><br/>
         </p>
@@ -66,7 +66,6 @@ def SendMeme(testMode: bool = False) -> bool:
     msg = MIMEMultipart("Message")
     msg["Subject"] = "Your Daily Meme"
     msg["From"] = me
-    msg["Bcc"] = me
     msg["To"] = SentToList
 
     msg.attach(MIMEText(text, "html"))
