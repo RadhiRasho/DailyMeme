@@ -1,15 +1,14 @@
-import requests
 from smtplib import SMTP
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from dotenv import load_dotenv
-from pystray import Menu, MenuItem as item
-import pystray
+from pystray import Icon, Menu, MenuItem as item
 from PIL import Image
-from pystray import Icon
+import requests
 import schedule
 import time
 import os
+import threading
 
 load_dotenv(".env")
 
@@ -95,11 +94,13 @@ def run_meme(icon: Icon):
     SendMeme(testMode=testMode)
 
 
-def setup(icon: Icon) -> None:
-    testMode = True if os.getenv("TESTING") == "True" else False
+def setup_icon(icon: Icon):
+    def setup_scheduler():
+        testMode = True if os.getenv("TESTING") == "True" else False
+        schedule.every().day.at("10:00").do(SendMeme, testMode=testMode)
 
-    # Schedule the main function to run at 8 am on Monday through Friday
-    schedule.every().day.at("10:00").do(SendMeme, testMode=testMode)
+    _setup_thread = threading.Thread(target=setup_scheduler)
+    _setup_thread.start()
 
     icon.notify("Daily Meme", "Scheduled memes have been started")
 
@@ -212,14 +213,14 @@ menu = Menu(
 
 iconName = "Daily Meme Test Mode" if os.getenv("TESTING") == "True" else "Daily Meme"
 
-icon = pystray.Icon(
+icon = Icon(
     "name",
     image,
     iconName,
     menu,
 )
 
-icon._start_setup(setup=setup)
+icon._start_setup(setup=setup_icon)
 
 icon._mark_ready()
 
