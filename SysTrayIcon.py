@@ -13,27 +13,67 @@ import threading
 load_dotenv(".env")
 
 
-def get_meme():
+class Meme:
+    postLink: str
+    subreddit: str
+    title: str
+    url: str
+    nsfw: bool
+    spoiler: bool
+    author: str
+    ups: int
+    preview: list[str]
+
+    def __init__(
+        self,
+        postLink: str,
+        subreddit: str,
+        title: str,
+        url: str,
+        nsfw: bool,
+        spoiler: bool,
+        author: str,
+        ups: int,
+        preview: list[str],
+    ):
+        self.postLink = postLink
+        self.subreddit = subreddit
+        self.title = title
+        self.url = url
+        self.nsfw = nsfw
+        self.spoiler = spoiler
+        self.author = author
+        self.ups = ups
+        self.preview = preview
+
+
+def get_meme() -> Meme:
     subReddit = os.getenv("SUB_REDDIT", "")
     data = requests.get(
         url=f"https://meme-api.com/gimme/{subReddit}",
         headers={"Content-Type": "application/json"},
     ).json()
 
-    return data
+    return Meme(**data)
 
 
-def recursive_Meme_Fetcher():
+def recursive_Meme_Fetcher() -> Meme:
+    def fetchMeme_theading():
+        data: Meme = get_meme()
+        return data if data.nsfw == False else recursive_Meme_Fetcher()
+
+    start_thread = threading.Thread(target=fetchMeme_theading)
+
     try:
-        data = get_meme()
-        return data if data["nsfw"] == False else recursive_Meme_Fetcher()
+        data: Meme = get_meme()
+        return data if data.nsfw == False else recursive_Meme_Fetcher()
     except Exception as e:
         print("Failed to fetch meme due to API being down or private sub reddit", e)
         return recursive_Meme_Fetcher()
 
 
 def SendMeme(testMode: bool = False) -> bool:
-    data = recursive_Meme_Fetcher()
+    data: Meme = recursive_Meme_Fetcher()
 
     text = """\
       <html>
@@ -48,10 +88,10 @@ def SendMeme(testMode: bool = False) -> bool:
       </body>
     </html>
     """.format(
-        url=data["url"],
-        title=data["title"],
-        subreddit=data["subreddit"],
-        author=data["author"],
+        url=data.url,
+        title=data.title,
+        subreddit=data.subreddit,
+        author=data.author,
     )
 
     me = os.getenv("ME", "Meme-Bot@memes.com")
