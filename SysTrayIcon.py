@@ -12,7 +12,6 @@ import threading
 
 load_dotenv(".env")
 
-
 class Meme:
     postLink: str
     subreddit: str
@@ -58,36 +57,41 @@ def get_meme() -> Meme:
 
 
 def recursive_Meme_Fetcher() -> Meme:
-    def fetchMeme_theading():
-        data: Meme = get_meme()
-        return data if data.nsfw == False else recursive_Meme_Fetcher()
-
-    start_thread = threading.Thread(target=fetchMeme_theading)
-
     try:
         data: Meme = get_meme()
         return data if data.nsfw == False else recursive_Meme_Fetcher()
-    except Exception as e:
-        print("Failed to fetch meme due to API being down or private sub reddit", e)
+    except Exception:
         return recursive_Meme_Fetcher()
 
 
 def SendMeme(testMode: bool = False) -> bool:
     data: Meme = recursive_Meme_Fetcher()
 
-    text = """\
-      <html>
-      <head></head>
-      <body>
-        <p>
-          <h3> r/{subreddit} - u/{author} </h3>
-          <h3>Title: {title} </h3>
+    HTML = """\
+        <!DOCTYPE html>
+        <html lang="en">
 
-          <img height='280px' width='900px' src='{url}'></img><br/><br/>
-        </p>
-      </body>
-    </html>
-    """.format(
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Document</title>
+        </head>
+
+        <body>
+            <div>
+                <div>
+                    <span>Author: u/{author}</span>
+                    <span>Subreddit: r/{subreddit}</span>
+                </div>
+                <h3>Title: {title}</h3>
+                <img width="450" alt='meme' src="{url}">
+            </div>
+        </body>
+
+        </html>
+    """
+
+    text = HTML.format(
         url=data.url,
         title=data.title,
         subreddit=data.subreddit,
@@ -237,7 +241,7 @@ menu = Menu(
             item(
                 "r/HistoryMemes",
                 updatedSubReddit,
-                checked=lambda item: os.getenv("SUB_REDDIT") == "historymemes",
+                checked=lambda item: os.getenv("SUB_REDDIT") == "HistoryMemes",
             ),
             item(
                 "Random Sub",
