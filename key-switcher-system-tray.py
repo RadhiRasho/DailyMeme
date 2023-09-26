@@ -9,7 +9,7 @@ def threaded_switcher():
         pressed: bool = False
         if keyboard.is_pressed(" "):
             if not pressed:
-                keyboard.write("SPACE")
+                keyboard.write("[SPACE]")
                 pressed = True
         else:
             pressed = False
