@@ -6,9 +6,8 @@ from pystray import Icon, Menu, MenuItem as item
 from PIL import Image
 import requests
 import schedule
-import time
 import os
-import threading
+import pymsgbox
 
 load_dotenv(".env")
 
@@ -135,17 +134,16 @@ def quit(icon: Icon):
 
 def run_meme(icon: Icon):
     testMode = True if os.getenv("TESTING") == "True" else False
-    icon.notify("Daily Meme", "Sending meme...")
+    icon.notify("Daily Meme", "Sending Meme Manually...")
     SendMeme(testMode=testMode)
 
 
 def setup_icon(icon: Icon):
-    def setup_scheduler():
-        testMode = True if os.getenv("TESTING") == "True" else False
-        schedule.every().day.at("10:00").do(SendMeme, testMode=testMode)
+    testMode = True if os.getenv("TESTING") == "True" else False
 
-    _setup_thread = threading.Thread(target=setup_scheduler)
-    _setup_thread.start()
+    scheduledTime = os.getenv("SCHEDULE_TIME", "10:00")
+
+    schedule.every().day.at(time_str=scheduledTime).do(SendMeme, testMode=testMode)
 
     icon.notify("Daily Meme", "Scheduled memes have been started")
 
@@ -192,6 +190,18 @@ def updatedSubReddit(icon: Icon, item: item):
 
     icon.notify("Daily Meme", f"Sub-Reddit Updated to {item.text}")
 
+def updateCurrentlyScheduledJobs(icon: Icon):
+    scheduledTime = os.getenv("SCHEDULE_TIME", "10:00")
+
+    testMode = True if os.getenv("TESTING") == "True" else False
+    schedule.clear()
+    schedule.every().day.at(time_str=scheduledTime).do(SendMeme, testMode=testMode)
+
+def on_input_text(icon: Icon):
+    text = pymsgbox.prompt(title="Daily Meme", text="Enter Time (HH:MM)")
+    os.environ.update({"SCHEDULE_TIME": text})
+
+    icon.notify("Daily Meme", f"Schedule Time Updated to {text}")
 
 image = Image.open("./favicon.ico")
 menu = Menu(
@@ -253,6 +263,8 @@ menu = Menu(
     ),
     item("Check Send To List", checkSendToList),
     item("Scheduled Jobs", scheduledJobs),
+    item("Set Schedule Time", on_input_text),
+    item("Update Currently Scheduled Jobs", updateCurrentlyScheduledJobs),
     item("Quit", quit),
 )
 
@@ -277,4 +289,3 @@ while True:
         icon.notify("Daily Meme", "No more memes to send")
         icon.stop()
         break
-    time.sleep(1)

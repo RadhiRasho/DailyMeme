@@ -14,6 +14,7 @@ packages = [
     "sys",
     "pystray",
     "PIL",
+    "pymsgbox"
 ]
 options = {
     "build_exe": {
