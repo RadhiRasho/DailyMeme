@@ -198,10 +198,11 @@ def updateCurrentlyScheduledJobs(icon: Icon):
     schedule.every().day.at(time_str=scheduledTime).do(SendMeme, testMode=testMode)
 
 def on_input_text(icon: Icon):
-    text = pymsgbox.prompt(title="Daily Meme", text="Enter Time (HH:MM)")
-    os.environ.update({"SCHEDULE_TIME": text})
+    text = pymsgbox.prompt(title="Daily Meme", text="Enter Time (HH:MM)", default="10:00")
+    if text is not None:
+        os.environ.update([("SCHEDULE_TIME", text)])
 
-    icon.notify("Daily Meme", f"Schedule Time Updated to {text}")
+        icon.notify("Daily Meme", f"Schedule Time Updated to {text}")
 
 image = Image.open("./favicon.ico")
 menu = Menu(
