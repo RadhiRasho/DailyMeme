@@ -82,6 +82,7 @@ def SendMeme(testMode: bool = False) -> bool:
                 <div>
                     <span>Author: u/{author}</span>
                     <span>Subreddit: r/{subreddit}</span>
+                    <span>Up Votes: {ups}</span>
                 </div>
                 <h3>Title: {title}</h3>
                 <img width="450" alt='meme' src="{url}">
@@ -93,6 +94,7 @@ def SendMeme(testMode: bool = False) -> bool:
 
     text = HTML.format(
         url=data.url,
+        ups=data.ups,
         title=data.title,
         subreddit=data.subreddit,
         author=data.author,
