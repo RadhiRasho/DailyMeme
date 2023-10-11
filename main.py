@@ -58,7 +58,7 @@ def get_meme() -> Meme:
 def recursive_Meme_Fetcher() -> Meme:
     try:
         data: Meme = get_meme()
-        return data if data.nsfw == False else recursive_Meme_Fetcher()
+        return data if data.nsfw == False and data.ups > 4000 else recursive_Meme_Fetcher()
     except Exception as ex:
         print("Failed to fetch meme due to API being down or private sub reddit", ex)
         return recursive_Meme_Fetcher()

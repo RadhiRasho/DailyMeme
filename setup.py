@@ -1,6 +1,6 @@
 from cx_Freeze import setup, Executable
 
-executables = [Executable("SysTrayIcon.py", base="Win32GUI", icon="favicon.ico")]
+executables = [Executable("main.py", base="Win32GUI", icon="favicon.ico")]
 
 packages = [
     "idna",
