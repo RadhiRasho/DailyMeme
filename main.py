@@ -1,6 +1,7 @@
 from smtplib import SMTP
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from time import sleep
 from dotenv import load_dotenv
 from pystray import Icon, Menu, MenuItem as item
 from PIL import Image
@@ -164,10 +165,7 @@ def scheduledJobs(icon: Icon):
 
 
 def checkSendToList(icon: Icon):
-    sendToList = (
-        "TESTING_SENT_TO_LIST" if os.getenv("TESTING") == "True" else "SEND_TO_LIST"
-    )
-
+    sendToList = ("TESTING_SENT_TO_LIST" if os.getenv("TESTING") == "True" else "SEND_TO_LIST")
     icon.notify(f"{os.getenv(sendToList)}")
 
 
@@ -202,7 +200,10 @@ def updateCurrentlyScheduledJobs(icon: Icon):
 def on_input_text(icon: Icon):
     text = pymsgbox.prompt(title="Daily Meme", text="Enter Time (HH:MM)", default="10:00")
     if text is not None:
-        os.environ.update([("SCHEDULE_TIME", text)])
+        if (len(text.split(":")) != 2) or (len(text.split(":")[0]) != 2) or (len(text.split(":")[1]) != 2):
+            icon.notify("Daily Meme", "Invalid Time Format")
+        else:
+            os.environ.update([("SCHEDULE_TIME", text)])
 
         icon.notify("Daily Meme", f"Schedule Time Updated to {text}")
 
@@ -288,7 +289,7 @@ icon.run_detached()
 
 while True:
     schedule.run_pending()
-    if not schedule.jobs:
-        icon.notify("Daily Meme", "No more memes to send")
-        icon.stop()
+    if not icon._running:
         break
+
+exit(0);
